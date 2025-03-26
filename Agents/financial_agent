@@ -1,0 +1,45 @@
+from phi.agent import Agent
+from phi.model.groq import Groq
+from phi.tools.yfinance import YFinanceTools
+from phi.tools.duckduckgo import DuckDuckGo
+import openai
+
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
+openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Web Search Agent
+
+websearch_agent = Agent(
+    name='web search agent',
+    role='Search the web for information',
+    model=Groq(id='llama-3.3-70b-specdec'),
+    tools=[DuckDuckGo()],
+    instructions=['Always include sources in your search results'],
+    show_tool_calls=True,
+    markdown=True,
+)
+
+## Financial Agent
+
+distance_agent = Agent(
+    name = 'Financial Agent',
+    model = Groq(id='llama-3.3-70b-specdec'),
+    tools=[
+        YFinanceTools(stock_price=True, analyst_recommendations=True, stock_fundamentals=True, company_news=True)
+    ],
+    instructions=['use tables to display data'],
+    show_tool_calls=True,
+    markdown=True,
+)
+
+multi_ai_agent = Agent(
+    team=[websearch_agent, distance_agent],
+    instructions=['always include sources in your search results','use tables to display data'],
+    show_tool_calls=True,
+    markdown=True,
+)
+
+multi_ai_agent.print_response('summarize analyst recommendations for NVIDIA')
